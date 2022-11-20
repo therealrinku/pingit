@@ -2,6 +2,10 @@
   <div class="root">
     <section>
       <form>
+        <select @click="loadHistory($event.target.value)">
+          <option v-for="(h, i) in history" :value="i">{{ h.apiUrl }}</option>
+        </select>
+
         <div>
           <select v-model="requestType">
             <option value="post">POST</option>
@@ -92,6 +96,17 @@ export default {
       }
       params = params.replace("&", "?")
 
+      //saving the history in local storage
+      const newHistory = {
+        apiUrl: this.apiUrl,
+        params: this.params,
+        headers: this.headers,
+        body: this.body,
+        requestType: this.requestType,
+      }
+      const updatedHistory = [...this.history, newHistory]
+      localStorage.setItem("history", JSON.stringify(updatedHistory))
+
       axios[this.requestType](this.apiUrl + params, this.requestType === "get" ? { headers: reqHeaders } : this.body ? this.body : {}, this.requestType !== "get" ? { headers: reqHeaders } : {}).then(res => {
         this.response = res.data
         this.responseCode = 200
@@ -101,6 +116,14 @@ export default {
         this.response = ""
       }
       )
+    },
+    loadHistory: function (index) {
+      const selectedHistory = this.history[index]
+      this.apiUrl = selectedHistory.apiUrl
+      this.params = selectedHistory.params
+      this.headers = selectedHistory.headers
+      this.body = selectedHistory.body
+      this.requestType = selectedHistory.requestType
     }
   },
   watch: {
@@ -116,6 +139,7 @@ export default {
       response: "",
       selectedTab: "params",
       responseCode: '',
+      history: JSON.parse(localStorage.getItem("history") || "[]")
     }
   }
 }
@@ -221,7 +245,15 @@ section:last-child {
   margin-top: 124px;
 }
 
-.selected {
-  border: solid 1px green;
+
+select {
+  min-width: 50px;
+  font-size: 14px;
+  border-radius: 3px;
+  background-color: none;
+  color: white;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  text-indent: 1px;
 }
 </style>
